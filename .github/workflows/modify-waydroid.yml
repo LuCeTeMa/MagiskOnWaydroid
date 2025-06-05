@@ -1,0 +1,46 @@
+name: Modify Waydroid
+
+on:
+  workflow_dispatch:
+    inputs:
+      magisk:
+        description: 'Magisk version (e.g. v27.0)'
+        required: true
+        default: 'v27.0'
+      gapps:
+        description: 'OpenGApps variant (e.g. pico, nano)'
+        required: true
+        default: 'pico'
+      root:
+        description: 'Root method (magisk/su)'
+        required: true
+        default: 'magisk'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y unzip curl git
+
+    - name: Clone Waydroid Image Script
+      run: |
+        git clone https://github.com/waydroid/waydroid_image_script.git
+        cd waydroid_image_script
+        ./waydroid_image.sh --gapps ${{ github.event.inputs.gapps }} --root ${{ github.event.inputs.root }} --magisk ${{ github.event.inputs.magisk }} --arch x64
+
+    - name: Upload system.img
+      uses: actions/upload-artifact@v3
+      with:
+        name: system-img
+        path: waydroid_image_script/output/*.img
